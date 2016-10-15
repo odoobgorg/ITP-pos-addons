@@ -22,7 +22,7 @@ class PosBoxOut(PosBox):
         return values
 
 
-class account_bank_statement_line(osv.osv):
+class AccountBankStatementLine(osv.osv):
     _inherit = "account.bank.statement.line"
 
     _columns = {
@@ -35,7 +35,7 @@ class account_bank_statement_line(osv.osv):
     }
 
 
-class account_cash_statement(osv.osv):
+class AccountCashStatement(osv.osv):
 
     _inherit = 'account.bank.statement'
 
@@ -103,7 +103,7 @@ class account_cash_statement(osv.osv):
     }
 
 
-class sessionpos(osv.Model):
+class Sessionpos(osv.Model):
 
     def _fun_difference(self, cr, uid, ids, fields, args, context=None):
         res = {}
@@ -116,7 +116,7 @@ class sessionpos(osv.Model):
                 flag = False
                 for producto in order.lines:
                     if producto.product_id.expense_pdt:
-                        print producto.product_id.name
+                        # print producto.product_id.name
                         flag = True
                 if flag:
                     totali -= (order.amount_total * 2)
@@ -267,7 +267,6 @@ class sessionpos(osv.Model):
     def summary_by_tax(self, cr, uid, ids, context=None):
         assert len(ids) == 1, 'This option should only be used for a single id at a time.'
         account_tax_obj = self.pool.get('account.tax')
-        cur_obj = self.pool.get('res.currency')
         res = {}  # tax_id -> data
         for session in self.browse(cr, uid, ids, context=context):
             for order in session.order_ids:
@@ -278,7 +277,7 @@ class sessionpos(osv.Model):
                     cur = line.order_id.pricelist_id.currency_id
                     taxes = account_tax_obj.compute_all(cr, uid, taxes_ids, price, cur.id, line.qty, line.product_id.id, line.order_id.partner_id.id or False)
 
-                    print 'taxes', taxes
+                    # print 'taxes', taxes
                     for tax in taxes['taxes']:
                         id = tax['id']
                         if id not in res:
@@ -293,7 +292,7 @@ class sessionpos(osv.Model):
                                        'tax': tax_rule,
                                        'total': 0,
                                        }
-                        #res[id]['base'] += cur.round(tax['price_unit'] * line.qty)
+                        # res[id]['base'] += cur.round(tax['price_unit'] * line.qty)
                         res[id]['base'] += cur.round(taxes['total_excluded'])
                         res[id]['total'] += tax['amount']
                         # cur_obj.round(cr, uid, cur, taxes['amount'])
@@ -302,7 +301,6 @@ class sessionpos(osv.Model):
 
     def _calc_tax(self, cr, uid, ids, name, args, context=None):
         account_tax_obj = self.pool.get('account.tax')
-        cur_obj = self.pool.get('res.currency')
         res = {}
         for session in self.browse(cr, uid, ids, context=context):
             res[session.id] = {'tax_base_total': 0}
@@ -312,7 +310,6 @@ class sessionpos(osv.Model):
 
                     price = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
                     taxes = account_tax_obj.compute_all(cr, uid, taxes_ids, price, line.qty, product=line.product_id, partner_id=line.order_id.partner_id.id or False)
-                    cur = line.order_id.pricelist_id.currency_id
 
                     res[session.id]['tax_base_total'] += taxes['total']
         return res
@@ -343,22 +340,22 @@ class sessionpos(osv.Model):
                                                                       ),
 
 
-        #'validate':fields.boolean(string="Validation",help="validation"),
-        #'difference':fields.function(_fun_difference,string="Difference"),
-        #'difference2':fields.float('difference2'),
-        #'venta_bruta':fields.function(_calc_vb,'Venta bruta', help='Gross sales'),
-        #'isv':fields.function(_calc_isv,'ISV'),
-        #'subtotal':fields.function(_calc_subtotal,'subtotal'),
-        #'nro_facturas':fields.function(_calc_no_facturas,'nro facturas',type="char"),
-        #'discount':fields.function(_calc_discount,'discount'),
-        #'tax_base_total':fields.function(_calc_tax,'Total Sales without taxes', multi='tax'),
+        # 'validate':fields.boolean(string="Validation",help="validation"),
+        # 'difference':fields.function(_fun_difference,string="Difference"),
+        # 'difference2':fields.float('difference2'),
+        # 'venta_bruta':fields.function(_calc_vb,'Venta bruta', help='Gross sales'),
+        # 'isv':fields.function(_calc_isv,'ISV'),
+        # 'subtotal':fields.function(_calc_subtotal,'subtotal'),
+        # 'nro_facturas':fields.function(_calc_no_facturas,'nro facturas',type="char"),
+        # 'discount':fields.function(_calc_discount,'discount'),
+        # 'tax_base_total':fields.function(_calc_tax,'Total Sales without taxes', multi='tax'),
         'untaxed_sales': fields.function(_calc_sales, 'Untaxed sales', multi='sales'),
-        #'money_incoming':fields.function(_calc_money_incoming,'money incoming',type="char"),
-        #'money_outgoing':fields.function(_calc_money_outgoing,'money outgoing',type="char"),
+        # 'money_incoming':fields.function(_calc_money_incoming,'money incoming',type="char"),
+        # 'money_outgoing':fields.function(_calc_money_outgoing,'money outgoing',type="char"),
         'statements_total': fields.function(_calc_statements_total, 'Total Payments Received'),
         'tickets_num': fields.function(_calc_tickets, 'Number of Tickets', type='integer', multi='tickets'),
         'ticket_first_id': fields.function(_calc_tickets, 'First Ticket', type='many2one', obj='pos.order', multi='tickets'),
         'ticket_last_id': fields.function(_calc_tickets, 'Last Ticket', type='many2one', obj='pos.order', multi='tickets'),
-        #'money_close':fields.float('money Close'),
-        #'money_reported':fields.float('money Reported'),
+        # 'money_close':fields.float('money Close'),
+        # 'money_reported':fields.float('money Reported'),
     }
